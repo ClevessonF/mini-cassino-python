@@ -27,6 +27,8 @@ Este projeto começou como um simples protótipo de caça-níqueis e evoluiu par
 
 ## 🎮 Demonstração
 
+![Demonstração do mini-cassino](demo.gif)
+
 ```
 ====================================
         🎰  MINI-CASSINO PYTHON  🎰
@@ -40,8 +42,6 @@ Saldo atual: 100.00 fichas
 ====================================
 Escolha uma opção:
 ```
-
-> 💡 Dica: grave um GIF jogando uma rodada e coloque aqui (ferramentas como [Terminalizer](https://github.com/faressoft/terminalizer) ou [asciinema](https://asciinema.org/) fazem isso facilmente). Isso deixa o repositório muito mais atrativo.
 
 ## ✨ Funcionalidades
 
