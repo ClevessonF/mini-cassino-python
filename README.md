@@ -2,6 +2,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
+![License](https://img.shields.io/badge/licença-uso%20livre%20%E2%9D%A4%EF%B8%8F-blueviolet)
 
 Um mini-cassino de terminal escrito em Python, com **saldo persistente**, **sistema de apostas** e dois jogos completos: Caça-Níqueis e Blackjack (21).
 
