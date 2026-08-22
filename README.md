@@ -1,7 +1,6 @@
 # 🎰 Mini-Cassino Python
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
-![License](https://img.shields.io/badge/license-MIT-green)
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
 
 Um mini-cassino de terminal escrito em Python, com **saldo persistente**, **sistema de apostas** e dois jogos completos: Caça-Níqueis e Blackjack (21).
@@ -20,8 +19,6 @@ Este projeto começou como um simples protótipo de caça-níqueis e evoluiu par
 - [Regras dos jogos](#-regras-dos-jogos)
 - [Conceitos praticados](#-conceitos-praticados)
 - [Roadmap](#-roadmap)
-- [Contribuindo](#-contribuindo)
-- [Licença](#-licença)
 
 ---
 
@@ -82,7 +79,6 @@ mini-cassino-python/
 ├── blackjack.py       # Lógica e regras do blackjack
 ├── saldo.json          # Gerado automaticamente (ignorado pelo git)
 ├── .gitignore
-├── LICENSE
 └── README.md
 ```
 
@@ -124,20 +120,6 @@ Ideias para evoluir o projeto (contribuições são bem-vindas):
 - [ ] Sistema de "níveis de aposta" (mesas de valores diferentes)
 - [ ] Testes automatizados com `pytest`
 - [ ] Interface gráfica simples (ex: com `pygame` ou `tkinter`)
-
-## 🤝 Contribuindo
-
-Contribuições são bem-vindas! Sinta-se à vontade para abrir uma *issue* com sugestões ou enviar um *pull request*:
-
-1. Faça um fork do projeto
-2. Crie uma branch (`git checkout -b feature/minha-melhoria`)
-3. Commit suas mudanças (`git commit -m 'Adiciona minha melhoria'`)
-4. Push para a branch (`git push origin feature/minha-melhoria`)
-5. Abra um Pull Request
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT — veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
 ---
 
