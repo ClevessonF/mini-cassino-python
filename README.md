@@ -2,6 +2,8 @@
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
+![License](https://img.shields.io/badge/licença-uso%20livre%20%E2%9D%A4%EF%B8%8F-blueviolet)
+[![Jogue Online](https://img.shields.io/badge/jogue-online%20no%20navegador-brightgreen)](https://clevessonf.github.io/mini-cassino-python/)
 
 Um mini-cassino de terminal escrito em Python, com **saldo persistente**, **sistema de apostas** e dois jogos completos: Caça-Níqueis e Blackjack (21).
 
@@ -12,6 +14,7 @@ Este projeto começou como um simples protótipo de caça-níqueis e evoluiu par
 ## 📋 Sumário
 
 - [Demonstração](#-demonstração)
+- [Jogue no navegador](#-jogue-no-navegador)
 - [Funcionalidades](#-funcionalidades)
 - [Como jogar](#-como-jogar)
 - [Instalação](#-instalação)
@@ -40,10 +43,17 @@ Saldo atual: 100.00 fichas
 Escolha uma opção:
 ```
 
+## 🌐 Jogue no navegador
+
+**[👉 Jogar agora](https://clevessonf.github.io/mini-cassino-python/)** — a mesma experiência do terminal (menu, Caça-Níqueis e Blackjack, com as mesmas regras e pagamentos), em HTML/CSS/JS puro, visual retrô (Web 1.0/anos 90). Não precisa instalar nada, é só abrir o link.
+
+O saldo dessa versão fica salvo no seu navegador (`localStorage`) — é independente do `saldo.json` da versão em Python, cada um guarda o progresso no seu próprio lugar.
+
 ## ✨ Funcionalidades
 
 - 🎰 Caça-níqueis com multiplicadores diferentes por símbolo
 - 🃏 Blackjack completo (compra de carta, dealer automático, blackjack natural)
+- 🌐 Versão web jogável no navegador (mesmo Caça-Níqueis e Blackjack, visual retrô)
 - 💰 Sistema de apostas com validação de saldo
 - 💾 Persistência do saldo em `saldo.json` (o progresso não se perde ao fechar)
 - 🧩 Código modular, separado por responsabilidade (fácil de estender)
@@ -77,6 +87,7 @@ mini-cassino-python/
 ├── saldo.py          # Persistência do saldo em saldo.json
 ├── caca_niquel.py     # Lógica e regras do caça-níqueis
 ├── blackjack.py       # Lógica e regras do blackjack
+├── index.html          # Versão web (HTML/CSS/JS) — mesmo jogo, no navegador
 ├── saldo.json          # Gerado automaticamente (ignorado pelo git)
 ├── .gitignore
 └── README.md
@@ -115,7 +126,7 @@ mini-cassino-python/
 
 Ideias para evoluir o projeto (contribuições são bem-vindas):
 
-- [ ] Adicionar jogo de Roleta
+- [ ] Roleta de números (mesa estilo cassino) como um terceiro jogo — diferente do Caça-Níqueis
 - [ ] Histórico de jogadas (log de vitórias/derrotas)
 - [ ] Sistema de "níveis de aposta" (mesas de valores diferentes)
 - [ ] Testes automatizados com `pytest`

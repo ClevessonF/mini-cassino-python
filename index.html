@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🎰 Mini-Cassino Python — Jogue no navegador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #22050c;
+    --bg-stripe: #2c0812;
+    --felt: #0e5c37;
+    --felt-dark: #073c24;
+    --gold: #f2c14e;
+    --gold-dark: #b8891f;
+    --red: #c62828;
+    --cream: #f6ecd9;
+    --ink: #0c0c0c;
+    --shadow: #000000;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html,body{
+    margin:0; padding:0;
+    background:
+      repeating-linear-gradient(45deg, var(--bg) 0px, var(--bg) 18px, var(--bg-stripe) 18px, var(--bg-stripe) 36px);
+    color: var(--cream);
+    font-family: ui-monospace, "Courier New", Courier, monospace;
+    min-height:100vh;
+  }
+
+  .pixel{ font-family: "Press Start 2P", ui-monospace, monospace; }
+
+  :focus-visible{ outline: 3px dashed var(--gold); outline-offset: 2px; }
+
+  /* ---------- Marquee ---------- */
+  .marquee{
+    overflow:hidden; white-space:nowrap;
+    background: var(--ink);
+    border-bottom: 3px solid var(--gold);
+    padding: 8px 0;
+  }
+  .marquee-track{
+    display:inline-block; padding-left:100%;
+    animation: marquee 18s linear infinite;
+    font-size: clamp(10px, 2.6vw, 14px);
+    color: var(--gold);
+  }
+  @keyframes marquee{ 0%{ transform: translateX(0);} 100%{ transform: translateX(-100%);} }
+
+  /* ---------- Layout ---------- */
+  .wrap{ max-width: 720px; margin:0 auto; padding: 18px 12px 40px; }
+
+  .cabinet{
+    background: var(--felt);
+    border: 4px solid var(--ink);
+    box-shadow: 8px 8px 0 var(--shadow);
+    clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px);
+    padding: clamp(14px, 4vw, 28px);
+  }
+
+  h1.title{
+    text-align:center;
+    font-size: clamp(13px, 3.6vw, 20px);
+    color: var(--gold);
+    text-shadow: 3px 3px 0 var(--ink);
+    margin: 4px 0 18px;
+    letter-spacing: 1px;
+  }
+
+  /* ---------- Botão chanfrado (motivo único do site) ---------- */
+  .btn{
+    font-family: "Press Start 2P", ui-monospace, monospace;
+    font-size: clamp(9px, 2.4vw, 12px);
+    color: var(--cream);
+    background: var(--felt-dark);
+    border: 3px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--shadow);
+    clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%, 0 8px);
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: transform .05s linear;
+  }
+  .btn:hover{ filter: brightness(1.15); }
+  .btn:active{ transform: translate(4px,4px); box-shadow: 0 0 0 var(--shadow); }
+  .btn:disabled{ opacity:.45; cursor:not-allowed; filter:none; }
+  .btn:disabled:active{ transform:none; box-shadow:4px 4px 0 var(--shadow); }
+  .btn-gold{ background: var(--gold-dark); color: var(--ink); }
+  .btn-wide{ width:100%; }
+
+  /* ---------- Saldo ---------- */
+  .saldo-bar{
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;
+    background: var(--ink); border: 3px solid var(--gold);
+    padding: 10px 14px; margin-bottom: 16px;
+  }
+  .saldo-bar .label{ font-size: clamp(9px, 2.4vw, 12px); color: var(--gold); }
+  .saldo-bar .valor{ font-size: clamp(14px, 3.6vw, 20px); color: var(--cream); }
+  .reset-link{
+    background:none; border:none; color: var(--gold); text-decoration: underline;
+    font-family: inherit; font-size: 11px; cursor:pointer; padding:4px;
+  }
+
+  /* ---------- Abas (menu) ---------- */
+  .tabs{ display:flex; gap:6px; margin-bottom: 12px; }
+  .tab{ flex:1; text-align:center; }
+  .tab.ativa{ background: var(--gold-dark); color: var(--ink); transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--shadow); }
+
+  .instrucoes{
+    text-align:center; font-size: clamp(9px, 2.3vw, 11px);
+    color: var(--cream); opacity:.85; margin: 4px 0 16px; line-height:1.6;
+  }
+
+  .painel{ background: var(--felt-dark); border: 3px solid var(--ink); padding: 14px; margin-bottom: 16px; }
+  .painel.escondido{ display:none; }
+  .painel h2{
+    font-family:"Press Start 2P", monospace; font-size: clamp(11px, 3vw, 14px);
+    color: var(--gold); text-align:center; margin: 0 0 14px;
+  }
+
+  /* ---------- Fichas ---------- */
+  .fichas-row{ display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom: 14px; }
+  .ficha{
+    width: 52px; height:52px;
+    clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+    border: 3px solid var(--ink); background: var(--gold-dark); color: var(--ink);
+    font-family:"Press Start 2P", monospace; font-size: 10px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; box-shadow: 3px 3px 0 var(--shadow);
+  }
+  .ficha.selecionada{
+    background: var(--gold); transform: translate(2px,2px);
+    box-shadow: 1px 1px 0 var(--shadow); outline: 2px solid var(--cream);
+  }
+
+  /* ---------- Caça-níqueis ---------- */
+  .rolos{
+    display:flex; justify-content:center; gap:10px; margin: 6px 0 14px;
+  }
+  .rolo{
+    width: clamp(58px, 18vw, 78px);
+    aspect-ratio: 1/1;
+    background: var(--ink);
+    border: 3px solid var(--gold);
+    display:flex; align-items:center; justify-content:center;
+    font-size: clamp(28px, 8vw, 38px);
+  }
+  .slot-resultado{
+    text-align:center; min-height: 24px;
+    font-size: clamp(10px, 2.6vw, 13px);
+    color: var(--gold); margin-bottom: 12px;
+  }
+  .tabela-pagamentos{
+    display:flex; flex-wrap:wrap; gap:6px; justify-content:center;
+    font-size: clamp(9px, 2.2vw, 11px); margin-top: 6px;
+  }
+  .tabela-pagamentos span{
+    background: var(--ink); border: 1px solid var(--gold-dark);
+    padding: 3px 6px;
+  }
+
+  /* ---------- Blackjack ---------- */
+  .mao-linha{ margin-bottom: 14px; }
+  .mao-titulo{ font-size: clamp(9px, 2.3vw, 11px); color: var(--gold); margin-bottom: 6px; }
+  .cartas{ display:flex; flex-wrap:wrap; gap:6px; min-height: 44px; }
+  .carta{
+    background: var(--cream); color: var(--ink);
+    border: 2px solid var(--ink);
+    min-width: 34px; height: 44px;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:bold; font-size: clamp(11px, 3vw, 14px);
+  }
+  .carta.vermelha{ color: var(--red); }
+  .carta.oculta{ background: var(--felt); color: var(--gold); font-size: 18px; }
+  .bj-total{ font-size: clamp(10px, 2.6vw, 12px); color: var(--cream); margin-top:4px; }
+
+  .bj-fase{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top: 10px; }
+  .bj-resultado{
+    text-align:center; min-height: 24px;
+    font-size: clamp(10px, 2.6vw, 13px); color: var(--gold); margin-top: 10px;
+  }
+
+  /* ---------- Terminal ---------- */
+  .terminal{
+    background: var(--ink); border: 3px solid var(--felt-dark);
+    padding: 12px 14px; min-height: 48px;
+    font-size: clamp(10px, 2.6vw, 12px); color: #7CFC9A; line-height:1.6;
+  }
+  .terminal::after{ content:"█"; animation: blink 1s step-end infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  footer{ text-align:center; font-size: 10px; color: var(--cream); opacity:.6; margin-top: 18px; }
+
+  @media (prefers-reduced-motion: reduce){
+    .marquee-track{ animation: none; }
+    .terminal::after{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="marquee"><div class="marquee-track pixel">✨ MINI-CASSINO PYTHON NA WEB ✨ CAÇA-NÍQUEIS ✨ BLACKJACK (21) ✨ APOSTE COM RESPONSABILIDADE ✨ CÓDIGO-FONTE NO GITHUB ✨</div></div>
+
+<div class="wrap">
+  <div class="cabinet">
+    <h1 class="title pixel">🎰 MINI-CASSINO PYTHON 🎰</h1>
+
+    <div class="saldo-bar">
+      <div><span class="label pixel">SALDO</span></div>
+      <div class="valor pixel" id="saldo-valor">100 FICHAS</div>
+      <button class="reset-link" id="btn-reset-saldo" type="button">[ resetar saldo ]</button>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button class="btn tab ativa pixel" id="tab-slots" type="button" role="tab" aria-selected="true">🎰 CAÇA-NÍQUEIS</button>
+      <button class="btn tab pixel" id="tab-bj" type="button" role="tab" aria-selected="false">🃏 BLACKJACK</button>
+    </div>
+
+    <p class="instrucoes">1. ESCOLHA UMA FICHA &nbsp;→&nbsp; 2. ESCOLHA O JOGO &nbsp;→&nbsp; 3. JOGUE!</p>
+
+    <div class="fichas-row" id="fichas-row" role="group" aria-label="Selecionar valor da ficha"></div>
+
+    <!-- ---------------- PAINEL: CAÇA-NÍQUEIS ---------------- -->
+    <section class="painel" id="painel-slots">
+      <h2>Caça-Níqueis</h2>
+      <div class="rolos">
+        <div class="rolo" id="rolo-0">🍒</div>
+        <div class="rolo" id="rolo-1">🍋</div>
+        <div class="rolo" id="rolo-2">⭐</div>
+      </div>
+      <div class="slot-resultado" id="slot-resultado" aria-live="polite">aguardando giro...</div>
+      <button class="btn btn-gold btn-wide" id="btn-girar" type="button">GIRAR! 🎰</button>
+      <div class="tabela-pagamentos">
+        <span>🍒🍒🍒 =2x</span><span>🍋🍋🍋 =3x</span><span>🍇🍇🍇 =4x</span>
+        <span>🔔🔔🔔 =5x</span><span>⭐⭐⭐ =8x</span><span>💎💎💎 =15x</span>
+        <span>2 iguais =1.2x</span>
+      </div>
+    </section>
+
+    <!-- ---------------- PAINEL: BLACKJACK ---------------- -->
+    <section class="painel escondido" id="painel-bj">
+      <h2>Blackjack (21)</h2>
+
+      <div class="mao-linha">
+        <div class="mao-titulo pixel">DEALER</div>
+        <div class="cartas" id="bj-cartas-dealer"></div>
+        <div class="bj-total" id="bj-total-dealer">total: --</div>
+      </div>
+
+      <div class="mao-linha">
+        <div class="mao-titulo pixel">VOCÊ</div>
+        <div class="cartas" id="bj-cartas-jogador"></div>
+        <div class="bj-total" id="bj-total-jogador">total: --</div>
+      </div>
+
+      <div class="bj-fase" id="bj-fase-aposta">
+        <button class="btn btn-gold btn-wide" id="btn-bj-apostar" type="button">APOSTAR E JOGAR 🃏</button>
+      </div>
+      <div class="bj-fase escondido" id="bj-fase-jogo">
+        <button class="btn" id="btn-bj-pedir" type="button">PEDIR CARTA (H)</button>
+        <button class="btn" id="btn-bj-parar" type="button">PARAR (S)</button>
+      </div>
+
+      <div class="bj-resultado" id="bj-resultado" aria-live="polite"></div>
+    </section>
+
+    <div class="terminal" id="terminal">&gt; escolha uma ficha e boa sorte</div>
+  </div>
+
+  <footer>Feito com 🐍 → 🌐 · o mesmo caça-níqueis e blackjack do projeto em Python</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var LS_KEY = 'mini-cassino-saldo';
+  var CHIP_VALUES = [5,10,25,50,100];
+
+  function carregarSaldoSalvo(){
+    try{
+      var salvo = localStorage.getItem(LS_KEY);
+      if (salvo !== null){
+        var n = parseFloat(salvo);
+        if (!isNaN(n) && n >= 0) return n;
+      }
+    } catch(e){ /* localStorage indisponível: segue só na memória */ }
+    return 100;
+  }
+  function salvarSaldo(valor){
+    try{ localStorage.setItem(LS_KEY, String(valor)); } catch(e){ /* ignora */ }
+  }
+
+  var estado = { saldo: carregarSaldoSalvo(), fichaAtual: 10 };
+
+  var el = {
+    saldoValor: document.getElementById('saldo-valor'),
+    btnResetSaldo: document.getElementById('btn-reset-saldo'),
+    fichasRow: document.getElementById('fichas-row'),
+    tabSlots: document.getElementById('tab-slots'),
+    tabBj: document.getElementById('tab-bj'),
+    painelSlots: document.getElementById('painel-slots'),
+    painelBj: document.getElementById('painel-bj'),
+    terminal: document.getElementById('terminal'),
+    rolos: [document.getElementById('rolo-0'), document.getElementById('rolo-1'), document.getElementById('rolo-2')],
+    slotResultado: document.getElementById('slot-resultado'),
+    btnGirar: document.getElementById('btn-girar'),
+    bjCartasDealer: document.getElementById('bj-cartas-dealer'),
+    bjCartasJogador: document.getElementById('bj-cartas-jogador'),
+    bjTotalDealer: document.getElementById('bj-total-dealer'),
+    bjTotalJogador: document.getElementById('bj-total-jogador'),
+    bjFaseAposta: document.getElementById('bj-fase-aposta'),
+    bjFaseJogo: document.getElementById('bj-fase-jogo'),
+    btnBjApostar: document.getElementById('btn-bj-apostar'),
+    btnBjPedir: document.getElementById('btn-bj-pedir'),
+    btnBjParar: document.getElementById('btn-bj-parar'),
+    bjResultado: document.getElementById('bj-resultado')
+  };
+
+  function log(msg){ el.terminal.textContent = '> ' + msg; }
+  function atualizarSaldoUI(){ el.saldoValor.textContent = formatarFichas(estado.saldo) + ' FICHAS'; }
+  function formatarFichas(v){
+    return (Math.round(v * 100) / 100).toString().replace(/\.00$/, '');
+  }
+
+  function montarFichas(){
+    CHIP_VALUES.forEach(function(valor){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ficha';
+      b.textContent = valor;
+      if (valor === estado.fichaAtual) b.classList.add('selecionada');
+      b.addEventListener('click', function(){
+        estado.fichaAtual = valor;
+        Array.prototype.forEach.call(el.fichasRow.children, function(c){ c.classList.toggle('selecionada', c === b); });
+      });
+      el.fichasRow.appendChild(b);
+    });
+  }
+
+  el.btnResetSaldo.addEventListener('click', function(){
+    if (slots.girando || bj.emJogo) return;
+    estado.saldo = 100;
+    atualizarSaldoUI();
+    salvarSaldo(estado.saldo);
+    log('saldo reiniciado para 100 fichas. boa sorte!');
+  });
+
+  // ---------- Abas ----------
+  function selecionarAba(qual){
+    var slotsAtivo = qual === 'slots';
+    el.tabSlots.classList.toggle('ativa', slotsAtivo);
+    el.tabBj.classList.toggle('ativa', !slotsAtivo);
+    el.tabSlots.setAttribute('aria-selected', String(slotsAtivo));
+    el.tabBj.setAttribute('aria-selected', String(!slotsAtivo));
+    el.painelSlots.classList.toggle('escondido', !slotsAtivo);
+    el.painelBj.classList.toggle('escondido', slotsAtivo);
+  }
+  el.tabSlots.addEventListener('click', function(){ selecionarAba('slots'); });
+  el.tabBj.addEventListener('click', function(){ selecionarAba('bj'); });
+
+  // =====================================================
+  // CAÇA-NÍQUEIS  (mesma matemática do caca_niquel.py)
+  // =====================================================
+  var SIMBOLOS = ['🍒','🍋','🍇','🔔','⭐','💎'];
+  var MULT_TRINCA = { '🍒':2, '🍋':3, '🍇':4, '🔔':5, '⭐':8, '💎':15 };
+  var MULT_PAR = 1.2;
+  var slots = { girando: false };
+
+  function simboloAleatorio(){ return SIMBOLOS[Math.floor(Math.random()*SIMBOLOS.length)]; }
+
+  function girarSlots(){
+    if (slots.girando) return;
+    var aposta = estado.fichaAtual;
+    if (aposta > estado.saldo){
+      log('você não tem fichas suficientes para essa aposta.');
+      return;
+    }
+    slots.girando = true;
+    el.btnGirar.disabled = true;
+    el.slotResultado.textContent = 'girando...';
+    log('a roda está girando...');
+
+    var ticks = 0;
+    var maxTicks = 10;
+    var intervalo = setInterval(function(){
+      el.rolos.forEach(function(r){ r.textContent = simboloAleatorio(); });
+      ticks++;
+      if (ticks >= maxTicks){
+        clearInterval(intervalo);
+        finalizarSlots(aposta);
+      }
+    }, 100);
+  }
+
+  function finalizarSlots(aposta){
+    var resultado = [simboloAleatorio(), simboloAleatorio(), simboloAleatorio()];
+    resultado.forEach(function(s, i){ el.rolos[i].textContent = s; });
+
+    var msg, msgTerminal;
+    if (resultado[0] === resultado[1] && resultado[1] === resultado[2]){
+      var mult = MULT_TRINCA[resultado[0]];
+      var premio = aposta * mult;
+      estado.saldo += premio;
+      msg = '🎉 TRINCA! Você ganhou ' + formatarFichas(premio) + ' fichas (x' + mult + ')!';
+    } else if (resultado[0] === resultado[1] || resultado[1] === resultado[2] || resultado[0] === resultado[2]){
+      var premioPar = aposta * MULT_PAR;
+      estado.saldo += (premioPar - aposta);
+      msg = 'Quase! Você recuperou ' + formatarFichas(premioPar) + ' fichas.';
+    } else {
+      estado.saldo -= aposta;
+      msg = 'Não saiu combinação. Você perdeu a aposta.';
+    }
+
+    el.slotResultado.textContent = msg;
+    log(msg);
+    atualizarSaldoUI();
+    salvarSaldo(estado.saldo);
+    slots.girando = false;
+    el.btnGirar.disabled = false;
+
+    if (estado.saldo <= 0){
+      log('você ficou sem fichas! clique em "resetar saldo" para jogar novamente.');
+    }
+  }
+
+  el.btnGirar.addEventListener('click', girarSlots);
+
+  // =====================================================
+  // BLACKJACK  (mesma matemática do blackjack.py)
+  // =====================================================
+  var NAIPES = ['♠','♥','♦','♣'];
+  var VALORES = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+  var bj = { emJogo: false, aposta: 0, maoJogador: [], maoDealer: [], baralho: [] };
+
+  function criarBaralho(){
+    var d = [];
+    VALORES.forEach(function(v){ NAIPES.forEach(function(n){ d.push([v, n]); }); });
+    for (var i = d.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = d[i]; d[i] = d[j]; d[j] = tmp;
+    }
+    return d;
+  }
+  function valorCarta(c){
+    var v = c[0];
+    if (v === 'J' || v === 'Q' || v === 'K') return 10;
+    if (v === 'A') return 11;
+    return parseInt(v, 10);
+  }
+  function valorMao(mao){
+    var total = mao.reduce(function(s, c){ return s + valorCarta(c); }, 0);
+    var ases = mao.filter(function(c){ return c[0] === 'A'; }).length;
+    while (total > 21 && ases > 0){ total -= 10; ases--; }
+    return total;
+  }
+  function renderCarta(c, vermelha){
+    var d = document.createElement('div');
+    d.className = 'carta' + (vermelha ? ' vermelha' : '');
+    d.textContent = c[0] + c[1];
+    return d;
+  }
+  function renderCartaOculta(){
+    var d = document.createElement('div');
+    d.className = 'carta oculta';
+    d.textContent = '🂠';
+    return d;
+  }
+  function ehVermelha(c){ return c[1] === '♥' || c[1] === '♦'; }
+
+  function atualizarMaosUI(esconderSegundaDealer){
+    el.bjCartasJogador.innerHTML = '';
+    bj.maoJogador.forEach(function(c){ el.bjCartasJogador.appendChild(renderCarta(c, ehVermelha(c))); });
+    el.bjTotalJogador.textContent = 'total: ' + valorMao(bj.maoJogador);
+
+    el.bjCartasDealer.innerHTML = '';
+    if (esconderSegundaDealer){
+      el.bjCartasDealer.appendChild(renderCarta(bj.maoDealer[0], ehVermelha(bj.maoDealer[0])));
+      el.bjCartasDealer.appendChild(renderCartaOculta());
+      el.bjTotalDealer.textContent = 'total: ?';
+    } else {
+      bj.maoDealer.forEach(function(c){ el.bjCartasDealer.appendChild(renderCarta(c, ehVermelha(c))); });
+      el.bjTotalDealer.textContent = 'total: ' + valorMao(bj.maoDealer);
+    }
+  }
+
+  function iniciarFaseAposta(){
+    bj.emJogo = false;
+    el.bjFaseAposta.classList.remove('escondido');
+    el.bjFaseJogo.classList.add('escondido');
+  }
+  function iniciarFaseJogo(){
+    bj.emJogo = true;
+    el.bjFaseAposta.classList.add('escondido');
+    el.bjFaseJogo.classList.remove('escondido');
+  }
+
+  function apostarEJogar(){
+    var aposta = estado.fichaAtual;
+    if (aposta > estado.saldo){
+      log('você não tem fichas suficientes para essa aposta.');
+      return;
+    }
+    bj.aposta = aposta;
+    bj.baralho = criarBaralho();
+    bj.maoJogador = [bj.baralho.pop(), bj.baralho.pop()];
+    bj.maoDealer = [bj.baralho.pop(), bj.baralho.pop()];
+    el.bjResultado.textContent = '';
+
+    if (valorMao(bj.maoJogador) === 21){
+      atualizarMaosUI(false);
+      var premioNatural = aposta * 1.5;
+      estado.saldo += premioNatural;
+      finalizarRodadaBj('🂡 BLACKJACK! Você ganhou ' + formatarFichas(premioNatural) + ' fichas (1.5x).');
+      return;
+    }
+
+    atualizarMaosUI(true);
+    iniciarFaseJogo();
+    log('sua vez: peça carta (H) ou pare (S).');
+  }
+
+  function pedirCarta(){
+    bj.maoJogador.push(bj.baralho.pop());
+    var total = valorMao(bj.maoJogador);
+    if (total > 21){
+      atualizarMaosUI(false);
+      estado.saldo -= bj.aposta;
+      finalizarRodadaBj('Você estourou 21! Perdeu a aposta.');
+      return;
+    }
+    atualizarMaosUI(true);
+  }
+
+  function pararEJogarDealer(){
+    atualizarMaosUI(false);
+    log('dealer jogando...');
+    var intervalo = setInterval(function(){
+      if (valorMao(bj.maoDealer) < 17){
+        bj.maoDealer.push(bj.baralho.pop());
+        atualizarMaosUI(false);
+      } else {
+        clearInterval(intervalo);
+        resolverRodadaBj();
+      }
+    }, 500);
+  }
+
+  function resolverRodadaBj(){
+    var totalJogador = valorMao(bj.maoJogador);
+    var totalDealer = valorMao(bj.maoDealer);
+    var msg;
+
+    if (totalDealer > 21 || totalJogador > totalDealer){
+      estado.saldo += bj.aposta;
+      msg = '🎉 Você venceu! (' + totalJogador + ' x ' + totalDealer + ')';
+    } else if (totalJogador === totalDealer){
+      msg = 'Empate (' + totalJogador + ' x ' + totalDealer + '). Aposta devolvida.';
+    } else {
+      estado.saldo -= bj.aposta;
+      msg = 'Dealer venceu (' + totalDealer + ' x ' + totalJogador + '). Você perdeu a aposta.';
+    }
+    finalizarRodadaBj(msg);
+  }
+
+  function finalizarRodadaBj(msg){
+    el.bjResultado.textContent = msg;
+    log(msg);
+    atualizarSaldoUI();
+    salvarSaldo(estado.saldo);
+    iniciarFaseAposta();
+
+    if (estado.saldo <= 0){
+      log('você ficou sem fichas! clique em "resetar saldo" para jogar novamente.');
+    }
+  }
+
+  el.btnBjApostar.addEventListener('click', apostarEJogar);
+  el.btnBjPedir.addEventListener('click', pedirCarta);
+  el.btnBjParar.addEventListener('click', pararEJogarDealer);
+
+  // ---------- Inicialização ----------
+  montarFichas();
+  atualizarSaldoUI();
+})();
+</script>
+</body>
+</html>
